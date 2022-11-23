@@ -1,6 +1,5 @@
 - 👋 Hi, I’m @andreystrokov
 - 🌱 I’m currently learning C++
-- 💞️ I’m looking to collaborate on Python
 - 📫 How to reach me on email: strokov58@gmail.com
 
 <!---
