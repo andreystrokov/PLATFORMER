@@ -100,20 +100,13 @@ void renderer::initVulkan()
     createCommandBuffer();
     createSyncObjects();
 
-//    createObject(verticesWall, indicesWall, "./shaders/background_vert.spv",
-//                                            "./shaders/background_frag.spv","./textures/wall.jpg");
-//    createObject(verticesExample, indicesExample, "./shaders/triangle_vert.spv",
-//                                                  "./shaders/triangle_frag.spv","./textures/muzzle.png");
+
 
 
     for(auto &i : *_gameObjects)
     {
         _createObject(i);
     }
-//    createObject(verticesExample2, indicesExample, "./shaders/triangle_vert.spv",
-//                                                  "./shaders/triangle_frag.spv","./textures/person.png");
-//    createObject(verticesExample3, indicesExample, "./shaders/triangle_vert.spv",
-//                                                  "./shaders/triangle_frag.spv","./textures/person.png");
 
 }
 
@@ -587,6 +580,26 @@ void renderer::createGraphicsPipeline(const std::string& _vertShader, const std:
 
     vkDestroyShaderModule(device, fragShaderModule, nullptr);
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
+}
+
+void renderer::createMainHero(VulkanObject* object)
+{
+    createTextureImageObj(object->texturePath,object->pixels,object->textureImage,object->textureImageMemory);
+    createTextureImageView(object->textureImage,object->imageView);
+    createTextureSampler(object->textureSampler);
+    createVertexBuffer(object->vertices, object->vertexBuffer, object->vertexBufferMemory);
+    createIndexBuffer(object->indices, object->indexBuffer, object->indexBufferMemory);
+    createDescriptorSetLayoutObj(object->descLayout);
+    createPipelineLayoutObj(object->descLayout,object->pipelineLayout);
+    createGraphicsPipeline(object->vertexShaderPath, object->fragmentShaderPath, object->ObjPipeline,object->pipelineLayout);
+    createUniformBuffersObj(object->uniformBuffers,object->uniformBuffersMemory,object->uniformBuffersMapped);
+    createDescriptorPoolObj(object->descPool);
+    createDescriptorSetsObj(object->uniformBuffers,
+                            object->descPool,
+                            object->descLayout,
+                            object->descSets,
+                            object->imageView,
+                            object->textureSampler);
 }
 
 void renderer::createPipelineLayoutObj(VkDescriptorSetLayout &_descLayout, VkPipelineLayout &_layout)

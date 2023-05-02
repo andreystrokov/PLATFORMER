@@ -168,6 +168,7 @@ public:
         cleanup();
     }
     void drawFrame();
+    void createMainHero(VulkanObject* object);
 private:
     void initWindow();
         static void framebufferResizeCallback(GLFWwindow* window,[[maybe_unused]] int width,[[maybe_unused]] int height) {
@@ -252,6 +253,8 @@ private:
                                     object.textureSampler);
             gameObjects.push_back(object);
         }
+
+
 
         void _createObject(VulkanObject* object)
         {

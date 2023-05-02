@@ -109,7 +109,6 @@ void GAME::GameLoop()
         }
         rnd.drawFrame();
         std::this_thread::sleep_for(0.16ms);
-        qDebug() << closeTrees->coords.x;
     }
 }
 
