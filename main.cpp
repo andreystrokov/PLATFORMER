@@ -1,13 +1,19 @@
 #include <iostream>
+#include "game.h"
+//#include "QApplication"
 #include "renderer.h"
+#include <QThread>
+#include "audio.h"
+
+using namespace std::chrono_literals;
+
 int main(int argc, char *argv[])
 {
-    renderer rnd;
-    try {
-           rnd.run();
-       } catch (const std::exception& e) {
-           std::cerr << e.what() << std::endl;
-           return EXIT_FAILURE;
-       }
+    system("/home/andrey/GAME_PROJECT/PLATFORMER/GAME/shaders/compile.sh");
+    std::this_thread::sleep_for(500ms);
+
+   GAME g;
+   g.init();
+   g.GameLoop();
     return 0;
 }
