@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <array>
 
+
 struct Vertex {
 
     glm::vec3 pos;
@@ -49,6 +50,8 @@ struct COORDS_UBO
 {
     glm::vec2 coordsUnit;
     glm::vec2 texCoord;
+    glm::int32 currentFrame;
+    glm::int32 currentAction;
 };
 class VulkanObject
 {

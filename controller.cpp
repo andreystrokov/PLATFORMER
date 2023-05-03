@@ -29,7 +29,7 @@ void controller::key_callback(GLFWwindow *window, int key, int scancode, int act
 //        auto it = std::find(controller::Ref()->keyPressed.begin(),controller::Ref()->keyPressed.end(),key);
 //        if(it != controller::Ref()->keyPressed.end())
             controller::Ref()->keyPressed.push_back(key);
-            std::cout <<  controller::Ref()->keyPressed.size() << std::endl;
+//            std::cout <<  controller::Ref()->keyPressed.size() << std::endl;
     }
     if(action == GLFW_RELEASE)
     {

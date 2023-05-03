@@ -6,6 +6,7 @@
 #include <thread>
 #include "mainActor.h"
 #include "background.h"
+#include "ground.h"
 #include <chrono>
 #include "audio.h"
 #include <QThread>
@@ -20,6 +21,7 @@ public:
     void init();
 
     void GameLoop();
+    void drawPause();
 private:
     void initObjects();
     renderer rnd;
@@ -30,13 +32,15 @@ private:
     Background* farTrees = nullptr;
     Background* midTrees = nullptr;
     Background* closeTrees = nullptr;
-
+    Ground* ground = nullptr;
     audio* audioModule = nullptr;
     QThread* audioThread = nullptr;
 
+    float levelGameXCoord = 0.0f;
 //    QApplication app(argc,argv);
-
+    bool isPaused = false;
     std::vector<VulkanObject*>*  objects = nullptr;
+    std::vector<VulkanCharacterObject*>*  characters = nullptr;
 };
 
 #endif // GAME_H

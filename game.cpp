@@ -8,19 +8,21 @@ GAME::GAME()
 void GAME::init()
 {
       initObjects();
-      rnd.setObjectsPtr(objects);
+      rnd.setObjectsPtr(objects,characters);
       rnd.init();
       keyController = controller::Ref();
       audioModule = new audio;
       audioThread = new QThread;
       QObject::connect(audioThread,&QThread::started,audioModule,&audio::play);
       audioModule->moveToThread(audioThread);
-//      audioThread->start();
+      audioThread->start();
 }
 void GAME::initObjects()
 {
 
     objects = new std::vector<VulkanObject*>;
+    characters = new std::vector<VulkanCharacterObject*>;
+
 
     background = new Background(verticesWall,
                                 indicesWall,
@@ -46,6 +48,13 @@ void GAME::initObjects()
                                 "./shaders/background_vert.spv",
                                 "./shaders/background_frag.spv");
     objects->push_back(closeTrees);
+
+    ground = new Ground(verticesGround,
+                        indicesGround,
+                        "./textures/background/groundNew.png",
+                        "./shaders/background_vert.spv",
+                        "./shaders/background_frag.spv");
+    objects->push_back(ground);
 //    background = new Background(verticesWall,
 //                                indicesWall,
 //                                "./textures/wall.jpg",
@@ -63,12 +72,21 @@ void GAME::initObjects()
 //                                "./shaders/background_frag.spv");
 //    objects->push_back(background);
 
+    std::vector<std::string> texturesMainActor =
+    {
+        "./textures/character/Idle.png",
+        "./textures/character/Run.png",
+        "./textures/character/Jump.png",
+        "./textures/character/Attacks.png",
+        "./textures/character/Death.png"
+    };
+
     mainActor = new MainActor(verticesMainActor,
                               indicesMainActor,
-                              "./textures/muzzle.png",
+                              texturesMainActor,
                               "./shaders/mainActor_vert.spv",
                               "./shaders/mainActor_frag.spv");
-    objects->push_back(mainActor);
+    characters->push_back(mainActor);
 
 
 
@@ -80,36 +98,73 @@ void GAME::GameLoop()
 //        auto start = std::chrono::high_resolution_clock::now();
         auto key = keyController->getCurrentKeyPressed();
 
-
-        if(key->size()==0)
-        {
-            mainActor->stay();
-            farTrees->stay();
-            midTrees->stay();
-            closeTrees->stay();
-        }
         for(auto& i : *key)
         {
-            if (i == GLFW_KEY_W) {
-                if(!mainActor->getJumpState())
-                 mainActor->jump();
+            if(i == GLFW_KEY_ESCAPE)
+            {
+                if(isPaused)
+                {
+                    isPaused = false;
+
+
+                }
+                else
+                {
+                    isPaused = true;
+                }
             }
-            else if (i == GLFW_KEY_A) {
-                std::cout << "A key pressed" << std::endl;
-            }
-            else if (i == GLFW_KEY_S) {
-                std::cout << "S key pressed" << std::endl;
-            }
-            else if (i == GLFW_KEY_D) {
-                farTrees->runFar();
-                midTrees->runMid();
-                closeTrees->runClose();
-                mainActor->runRight();
+
+             if(!isPaused)
+             {
+                 if (i == GLFW_KEY_W) {
+                      mainActor->jump();
+                 }
+                 else if (i == GLFW_KEY_A) {
+                     std::cout << "A key pressed" << std::endl;
+                 }
+                 else if (i == GLFW_KEY_S) {
+                     std::cout << "S key pressed" << std::endl;
+                 }
+                 else if (i == GLFW_KEY_D) {
+                     if(!mainActor->getAttackState())
+                     {
+                         farTrees->runFar();
+                         midTrees->runMid();
+                         closeTrees->runClose();
+                         mainActor->runRight();
+                         ground->move();
+
+                         levelGameXCoord+= 0.1;
+                     }
+                 }
+                 else if(i == GLFW_KEY_SPACE)
+                 {
+                     mainActor->attack();
+                 }
+             }
+        }
+        if(!isPaused)
+        {
+            mainActor->computeXY();
+
+            if(key->size()==0)
+            {
+                mainActor->stay();
+                farTrees->stay();
+                midTrees->stay();
+                closeTrees->stay();
+                ground->stay();
             }
         }
+
         rnd.drawFrame();
         std::this_thread::sleep_for(0.16ms);
     }
+}
+
+void GAME::drawPause()
+{
+
 }
 
 

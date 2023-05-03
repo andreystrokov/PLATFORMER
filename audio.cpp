@@ -12,11 +12,12 @@ void audio::play()
 
         // set the audio file to play
         player = new QMediaPlayer;
+        player->setLoops(QMediaPlayer::Infinite);
         QAudioOutput* audioOutput = new QAudioOutput;
         player->setAudioOutput(audioOutput);
-        connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
-        player->setSource(QUrl::fromLocalFile("/home/andrey/music.mp3"));
-        audioOutput->setVolume(50);
+//        connect(player, SIGNAL(positionChanged(qint64)), this, SLOT(positionChanged(qint64)));
+        player->setSource(QUrl::fromLocalFile("./music/song.mp3"));
+        audioOutput->setVolume(10);
         player->play();
         //       return 0;
 }

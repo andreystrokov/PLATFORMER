@@ -27,6 +27,7 @@
 
 
 #include "VulkanModel.h"
+#include "VulkanCharacterModel.h"
 //#include <QKeyEvent>
 
 
@@ -60,42 +61,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 
     return VK_FALSE;
 }
-
-//struct Vertex {
-//    glm::vec2 pos;
-//    glm::vec3 color;
-//    glm::vec2 texCoord;
-
-
-//    static VkVertexInputBindingDescription getBindingDescription() {
-//        VkVertexInputBindingDescription bindingDescription{};
-//        bindingDescription.binding = 0;
-//        bindingDescription.stride = sizeof(Vertex);
-//        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-//        return bindingDescription;
-//    }
-
-//    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-//        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-
-//        attributeDescriptions[0].binding = 0;
-//        attributeDescriptions[0].location = 0;
-//        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-//        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-//        attributeDescriptions[1].binding = 0;
-//        attributeDescriptions[1].location = 1;
-//        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-//        attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-//        attributeDescriptions[2].binding = 0;
-//        attributeDescriptions[2].location = 2;
-//        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-//        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-//        return attributeDescriptions;
-//    }
-//};
 
 struct ObjectBuffer
 {
@@ -135,18 +100,6 @@ struct UniformBufferObject {
 };
 
 
-
-//const std::vector<Vertex> vertices = {
-//    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-//    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-//    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-//    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
-//};
-
-//const std::vector<uint16_t> indices = {
-//    0, 1, 2, 2, 3, 0
-//};
-
 //#define NDEBUG
 
 #ifdef NDEBUG
@@ -161,14 +114,14 @@ class renderer : public QObject
 public:
     renderer();
     void init();
-    void setObjectsPtr(std::vector<VulkanObject *> *_ptr);
+    void setObjectsPtr(std::vector<VulkanObject *> *_ptr,std::vector<VulkanCharacterObject *> * _characters);
     void run()
     {
         mainLoop();
         cleanup();
     }
     void drawFrame();
-    void createMainHero(VulkanObject* object);
+    void createCharacter(VulkanCharacterObject* object);
 private:
     void initWindow();
         static void framebufferResizeCallback(GLFWwindow* window,[[maybe_unused]] int width,[[maybe_unused]] int height) {
@@ -202,7 +155,6 @@ private:
         void createDescriptorPool();
         void createDescriptorSets();
         void createUniformBuffers();
-        void updateUniformBuffer(uint32_t currentImage);
         void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
         void createSyncObjects();
         void cleanupSwapChain();
@@ -223,6 +175,14 @@ private:
             createFramebuffers();
         }
 
+        void createTextureImageCharacter(std::vector<std::string> _paths, std::vector<stbi_uc *> _pixels, std::vector<VkImage> &_textureImage, std::vector<VkDeviceMemory> &_textureImageMemory);
+        void createTextureImageViewCharacher(std::vector<VkImage> &_textureImages, std::vector<VkImageView> &_imageViews);
+        void createTextureSamplersCharacter(std::vector<VkSampler> &_samplers, std::vector<std::string> _paths);
+        void createDescriptorSetLayoutCharacter(VkDescriptorSetLayout& _descLayout);
+        void createDescriptorPoolCharacter(VkDescriptorPool &_descPool);
+        void createDescriptorSetsCharacter(std::vector<VkBuffer> &_uniformBuffers, VkDescriptorPool &_descPool, VkDescriptorSetLayout &_descLayout, std::vector<VkDescriptorSet> &_descSets, std::vector<VkImageView> &_imageView, std::vector<VkSampler> &_sampler);
+
+
 
         void createImage(uint32_t width, uint32_t height,
                          VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
@@ -230,33 +190,11 @@ private:
         void createVertexBuffer(std::vector<Vertex> _vertices, VkBuffer& _vertexBuffer, VkDeviceMemory& _vertexBufferMemory);
         void createIndexBuffer(std::vector<uint32_t> _indices, VkBuffer &_indexBuffer, VkDeviceMemory &_indexBufferMemory);
         void createGraphicsPipeline(const std::string &_vertShader, const std::string &_fragShader, VkPipeline &_pipeline, VkPipelineLayout &_layout);
-        void createObject(std::vector<Vertex> _vertices, std::vector<uint32_t> _indices,
-                          const std::string& _vertShader, const std::string& _fragShader,std::string _texture)
-        {
-            ObjectBuffer object;
-
-            createTextureImageObj(_texture,object.pixels,object.textureImage,object.textureImageMemory);
-            createTextureImageView(object.textureImage,object.imageView);
-            createTextureSampler(object.textureSampler);
-            createVertexBuffer(_vertices, object.vertexBuffer, object.vertexBufferMemory);
-            createIndexBuffer(_indices, object.indexBuffer, object.indexBufferMemory);
-            createDescriptorSetLayoutObj(object.descLayout);
-            createPipelineLayoutObj(object.descLayout,object.pipelineLayout);
-            createGraphicsPipeline(_vertShader, _fragShader, object.ObjPipeline,object.pipelineLayout);
-            createUniformBuffersObj(object.uniformBuffers,object.uniformBuffersMemory,object.uniformBuffersMapped);
-            createDescriptorPoolObj(object.descPool);
-            createDescriptorSetsObj(object.uniformBuffers,
-                                    object.descPool,
-                                    object.descLayout,
-                                    object.descSets,
-                                    object.imageView,
-                                    object.textureSampler);
-            gameObjects.push_back(object);
-        }
 
 
 
-        void _createObject(VulkanObject* object)
+
+        void createObject(VulkanObject* object)
         {
 //            ObjectBuffer object;
 
@@ -310,8 +248,6 @@ private:
 
         void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
         void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
-
-
         void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     void mainLoop();
     void cleanup();
@@ -350,10 +286,10 @@ private:
     ObjectBuffer exampleObject;
 
 
-    std::vector<ObjectBuffer> gameObjects;
 
 
     std::vector<VulkanObject*>* _gameObjects;
+    std::vector<VulkanCharacterObject*>* _gameCharacters;
 //    std::vector<VkBuffer> uniformBuffers;
 //    std::vector<VkDeviceMemory> uniformBuffersMemory;
 //    std::vector<void*> uniformBuffersMapped;
