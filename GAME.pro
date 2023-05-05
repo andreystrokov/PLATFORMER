@@ -9,14 +9,17 @@ system(sh $$PWD/shaders/compile.sh)
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        Vulkan/GameRenderer.cpp \
         audio.cpp \
         background.cpp \
         controller.cpp \
         game.cpp \
         ground.cpp \
+        interfaceElements/buttonmainmenu.cpp \
+        interfaceElements/wallpaper.cpp \
         main.cpp \
         mainActor.cpp \
-        renderer.cpp
+        mainMenu.cpp
 
 LIBS += -lvulkan -lglfw -lncurses -lmpg123 -lvlc -lao
 
@@ -26,6 +29,12 @@ LIBS += -lvulkan -lglfw -lncurses -lmpg123 -lvlc -lao
 #!isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    GameRenderer.h \
+    Vulkan/GameRenderer.h \
+    Vulkan/VulkanCharacterModel.h \
+    Vulkan/VulkanModel.h \
+    Vulkan/VulkanTypes.h \
+    Vulkan/shaderLoader.h \
     VulkanCharacterModel.h \
     VulkanModel.h \
     audio.h \
@@ -33,8 +42,10 @@ HEADERS += \
     controller.h \
     game.h \
     ground.h \
+    interfaceElements/buttonmainmenu.h \
+    interfaceElements/wallpaper.h \
     mainActor.h \
-    renderer.h \
+    mainMenu.h \
     shaderLoader.h
 
 DISTFILES += \

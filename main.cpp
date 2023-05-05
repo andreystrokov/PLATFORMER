@@ -1,7 +1,6 @@
 #include <iostream>
 #include "game.h"
 //#include "QApplication"
-#include "renderer.h"
 #include <QThread>
 #include "audio.h"
 

@@ -2,9 +2,10 @@
 #define GAME_H
 
 #include "controller.h"
-#include "renderer.h"
+#include "Vulkan/GameRenderer.h"
 #include <thread>
 #include "mainActor.h"
+#include "mainMenu.h"
 #include "background.h"
 #include "ground.h"
 #include <chrono>
@@ -24,7 +25,10 @@ public:
     void drawPause();
 private:
     void initObjects();
-    renderer rnd;
+
+
+    MainMenuClass mainMenu;
+    GameRenderer rnd;
     controller* keyController;
     MainActor*  mainActor = nullptr;
 

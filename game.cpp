@@ -10,12 +10,17 @@ void GAME::init()
       initObjects();
       rnd.setObjectsPtr(objects,characters);
       rnd.init();
+
+
+//      rnd.createMainMenu(&mainMenu);
+
+
       keyController = controller::Ref();
       audioModule = new audio;
       audioThread = new QThread;
       QObject::connect(audioThread,&QThread::started,audioModule,&audio::play);
       audioModule->moveToThread(audioThread);
-      audioThread->start();
+//      audioThread->start();
 }
 void GAME::initObjects()
 {
@@ -55,22 +60,7 @@ void GAME::initObjects()
                         "./shaders/background_vert.spv",
                         "./shaders/background_frag.spv");
     objects->push_back(ground);
-//    background = new Background(verticesWall,
-//                                indicesWall,
-//                                "./textures/wall.jpg",
-//                                "./shaders/background_vert.spv",
-//                                "./shaders/background_frag.spv");
-//    background = new Background(verticesWall,
-//                                indicesWall,
-//                                "./textures/wall.jpg",
-//                                "./shaders/background_vert.spv",
-//                                "./shaders/background_frag.spv");
-//    background = new Background(verticesWall,
-//                                indicesWall,
-//                                "./textures/wall.jpg",
-//                                "./shaders/background_vert.spv",
-//                                "./shaders/background_frag.spv");
-//    objects->push_back(background);
+
 
     std::vector<std::string> texturesMainActor =
     {
@@ -95,7 +85,7 @@ void GAME::GameLoop()
 {
     while(true)
     {
-//        auto start = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
         auto key = keyController->getCurrentKeyPressed();
 
         for(auto& i : *key)
@@ -105,13 +95,12 @@ void GAME::GameLoop()
                 if(isPaused)
                 {
                     isPaused = false;
-
-
                 }
                 else
                 {
                     isPaused = true;
                 }
+                std::cout << i << std::endl;
             }
 
              if(!isPaused)

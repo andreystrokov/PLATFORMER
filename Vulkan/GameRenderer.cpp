@@ -1,4 +1,4 @@
-#include "renderer.h"
+#include "GameRenderer.h"
 #include <QDebug>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -14,43 +14,42 @@
 #include <stb/stb_image.h>
 
 
-renderer::renderer()
+GameRenderer::GameRenderer()
 {
-
 
 }
 
-void renderer::init()
+void GameRenderer::init()
 {
     initWindow();
     initVulkan();
 }
 
-void renderer::setObjectsPtr(std::vector<VulkanObject*> *_ptr,std::vector<VulkanCharacterObject*> * _characters)
+void GameRenderer::setObjectsPtr(std::vector<VulkanObject*> *_ptr,std::vector<VulkanCharacterObject*> * _characters)
 {
     _gameObjects = _ptr;
     _gameCharacters = _characters;
 }
-void renderer::initWindow()
+void GameRenderer::initWindow()
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
-    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+//    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+//    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-    GLFWmonitor* MyMonitor =  glfwGetPrimaryMonitor(); // The primary monitor.. Later Occulus?..
+//    window = glfwCreateWindow(mode->width,mode->height, "Vulkan", glfwGetPrimaryMonitor(), nullptr); // FULLSCREEN
+    window = glfwCreateWindow(800,600, "Vulkan", nullptr, nullptr); // TEST SCREEN
 
-    const GLFWvidmode* mode = glfwGetVideoMode(MyMonitor);
-
-
-//    window = glfwCreateWindow(mode->width, mode->height, "Vulkan", glfwGetPrimaryMonitor(), nullptr);
-    window = glfwCreateWindow(mode->width,mode->height, "Vulkan", MyMonitor, nullptr);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
     glfwSetKeyCallback(window, controller::Ref()->key_callback);
+    glfwSetCursorPosCallback(window,controller::Ref()->mousePos_callback);
+    glfwSetMouseButtonCallback(window,controller::Ref()->mouseBtn_callback);
 }
-void renderer::initVulkan()
+void GameRenderer::initVulkan()
 {
+
+
     createInstance();
     setupDebugMessenger();
     createSurface();
@@ -65,19 +64,18 @@ void renderer::initVulkan()
     createCommandBuffer();
     createSyncObjects();
 
-
     for(auto &i : *_gameObjects)
-    {
-        createObject(i);
-    }
-    for(auto &i : *_gameCharacters)
-    {
-        createCharacter(i);
-    }
+        {
+            createObject(i);
+        }
+        for(auto &i : *_gameCharacters)
+        {
+            createCharacter(i);
+        }
 
 }
 
-void renderer::createInstance()
+void GameRenderer::createInstance()
 {
     if (enableValidationLayers && !checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested, but not available!");
@@ -117,7 +115,7 @@ void renderer::createInstance()
         }
 }
 
-void renderer::pickPhysicalDevice()
+void GameRenderer::pickPhysicalDevice()
 {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -138,7 +136,7 @@ void renderer::pickPhysicalDevice()
     }
 }
 
-bool renderer::isDeviceSuitable(VkPhysicalDevice device)
+bool GameRenderer::isDeviceSuitable(VkPhysicalDevice device)
 {
     QueueFamilyIndices indices = findQueueFamilies(device);
 
@@ -151,8 +149,7 @@ bool renderer::isDeviceSuitable(VkPhysicalDevice device)
     return indices.isComplete() && extensionsSupported && swapChainAdequate;
 }
 
-
-VkFormat renderer::findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+VkFormat GameRenderer::findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
     for (VkFormat format : candidates) {
         VkFormatProperties props;
@@ -166,7 +163,7 @@ VkFormat renderer::findSupportedFormat(const std::vector<VkFormat> &candidates, 
     }
 }
 
-VkFormat renderer::findDepthFormat()
+VkFormat GameRenderer::findDepthFormat()
 {
     return findSupportedFormat(
                 {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
@@ -175,12 +172,12 @@ VkFormat renderer::findDepthFormat()
                 );
 }
 
-bool renderer::hasStencilComponent(VkFormat format)
+bool GameRenderer::hasStencilComponent(VkFormat format)
 {
     return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-    SwapChainSupportDetails renderer::querySwapChainSupport(VkPhysicalDevice device)
+    SwapChainSupportDetails GameRenderer::querySwapChainSupport(VkPhysicalDevice device)
 {
     SwapChainSupportDetails details;
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
@@ -201,7 +198,7 @@ bool renderer::hasStencilComponent(VkFormat format)
     return details;
     }
 
-    uint32_t renderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+    uint32_t GameRenderer::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
     {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
@@ -214,7 +211,7 @@ bool renderer::hasStencilComponent(VkFormat format)
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-void renderer::createSwapChain()
+void GameRenderer::createSwapChain()
 {
     SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
@@ -269,7 +266,7 @@ void renderer::createSwapChain()
     swapChainExtent = extent;
 }
 
-    VkSurfaceFormatKHR renderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
+    VkSurfaceFormatKHR GameRenderer::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
 {
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
@@ -279,7 +276,7 @@ void renderer::createSwapChain()
     return availableFormats[0];
 }
 
-    VkPresentModeKHR renderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes)
+    VkPresentModeKHR GameRenderer::chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes)
 {
     for (const auto& availablePresentMode : availablePresentModes) {
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -289,7 +286,7 @@ void renderer::createSwapChain()
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-    VkExtent2D renderer::chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities)
+    VkExtent2D GameRenderer::chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities)
 {
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
@@ -309,7 +306,7 @@ void renderer::createSwapChain()
     }
 }
 
-    QueueFamilyIndices renderer::findQueueFamilies(VkPhysicalDevice device)
+    QueueFamilyIndices GameRenderer::findQueueFamilies(VkPhysicalDevice device)
 {
     QueueFamilyIndices indices;
 
@@ -341,7 +338,7 @@ void renderer::createSwapChain()
     return indices;
 }
 
-    bool renderer::checkDeviceExtensionSupport(VkPhysicalDevice device)
+    bool GameRenderer::checkDeviceExtensionSupport(VkPhysicalDevice device)
 {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -358,7 +355,7 @@ void renderer::createSwapChain()
     return requiredExtensions.empty();
 }
 
-void renderer::createLogicalDevice()
+void GameRenderer::createLogicalDevice()
 {
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
@@ -399,14 +396,14 @@ void renderer::createLogicalDevice()
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void renderer::createSurface()
+void GameRenderer::createSurface()
 {
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
             throw std::runtime_error("failed to create window surface!");
     }
 }
 
-void renderer::createImageViews()
+void GameRenderer::createImageViews()
 {
     swapChainImageViews.resize(swapChainImages.size());
     for (size_t i = 0; i < swapChainImages.size(); i++) {
@@ -414,7 +411,7 @@ void renderer::createImageViews()
     }
 }
 
-void renderer::createPipelineLayout()
+void GameRenderer::createPipelineLayout()
 {
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -428,7 +425,7 @@ void renderer::createPipelineLayout()
     }
 }
 
-void renderer::createGraphicsPipeline(const std::string& _vertShader, const std::string& _fragShader, VkPipeline& _pipeline, VkPipelineLayout& _layout)
+void GameRenderer::createGraphicsPipeline(const std::string& _vertShader, const std::string& _fragShader, VkPipeline& _pipeline, VkPipelineLayout& _layout)
 {
     auto vertShaderCode = readFile(_vertShader);
     auto fragShaderCode = readFile(_fragShader);
@@ -549,7 +546,7 @@ void renderer::createGraphicsPipeline(const std::string& _vertShader, const std:
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void renderer::createPipelineLayoutObj(VkDescriptorSetLayout &_descLayout, VkPipelineLayout &_layout)
+void GameRenderer::createPipelineLayoutObj(VkDescriptorSetLayout &_descLayout, VkPipelineLayout &_layout)
 {
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -563,7 +560,7 @@ void renderer::createPipelineLayoutObj(VkDescriptorSetLayout &_descLayout, VkPip
     }
 }
 
-void renderer::createUniformBuffersObj(std::vector<VkBuffer> &_uniformBuffers, std::vector<VkDeviceMemory> &_uniformBuffersMemory, std::vector<void *> &_uniformBuffersMapped)
+void GameRenderer::createUniformBuffersObj(std::vector<VkBuffer> &_uniformBuffers, std::vector<VkDeviceMemory> &_uniformBuffersMemory, std::vector<void *> &_uniformBuffersMapped)
 {
     VkDeviceSize bufferSize = sizeof(COORDS_UBO);
 
@@ -578,7 +575,7 @@ void renderer::createUniformBuffersObj(std::vector<VkBuffer> &_uniformBuffers, s
     }
 }
 
-void renderer::createDescriptorSetLayoutObj(VkDescriptorSetLayout &_descLayout)
+void GameRenderer::createDescriptorSetLayoutObj(VkDescriptorSetLayout &_descLayout)
 {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
@@ -606,7 +603,7 @@ void renderer::createDescriptorSetLayoutObj(VkDescriptorSetLayout &_descLayout)
     }
 }
 
-void renderer::createDescriptorPoolObj(VkDescriptorPool &_descPool)
+void GameRenderer::createDescriptorPoolObj(VkDescriptorPool &_descPool)
 {
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -626,7 +623,7 @@ void renderer::createDescriptorPoolObj(VkDescriptorPool &_descPool)
     }
 }
 
-void renderer::createDescriptorSetsObj(std::vector<VkBuffer> &_uniformBuffers, VkDescriptorPool &_descPool,
+void GameRenderer::createDescriptorSetsObj(std::vector<VkBuffer> &_uniformBuffers, VkDescriptorPool &_descPool,
                                        VkDescriptorSetLayout &_descLayout, std::vector<VkDescriptorSet> &_descSets,
                                        VkImageView& _imageView,VkSampler& _sampler)
 {
@@ -676,16 +673,7 @@ void renderer::createDescriptorSetsObj(std::vector<VkBuffer> &_uniformBuffers, V
     }
 }
 
-void renderer::createDepthResources()
-{
-    VkFormat depthFormat = findDepthFormat();
-    createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
-    depthImageView = createImageView(depthImage, depthFormat,VK_IMAGE_ASPECT_DEPTH_BIT);
-
-//    transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
-}
-
-void renderer::createTextureImageObj(std::string _path,stbi_uc* pixels,VkImage& _textureImage,
+void GameRenderer::createTextureImageObj(std::string _path,stbi_uc* pixels,VkImage& _textureImage,
                                      VkDeviceMemory& _textureImageMemory)
 {
     int texWidth, texHeight, texChannels;
@@ -750,7 +738,7 @@ void renderer::createTextureImageObj(std::string _path,stbi_uc* pixels,VkImage& 
 }
 
 
-void renderer::createTextureImageCharacter(std::vector<std::string> _paths,
+void GameRenderer::createTextureImageCharacter(std::vector<std::string> _paths,
                                            std::vector<stbi_uc*> _pixels,
                                            std::vector<VkImage>& _textureImage,
                                            std::vector<VkDeviceMemory>& _textureImageMemory)
@@ -824,18 +812,18 @@ void renderer::createTextureImageCharacter(std::vector<std::string> _paths,
 }
 
 
-void renderer::createTextureImageView(VkImage &_textureImage, VkImageView &_imageView)
+void GameRenderer::createTextureImageView(VkImage &_textureImage, VkImageView &_imageView)
 {
     _imageView = createImageView(_textureImage, VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT);
 }
-void renderer::createTextureImageViewCharacher(std::vector<VkImage> &_textureImages, std::vector<VkImageView> &_imageViews)
+void GameRenderer::createTextureImageViewCharacher(std::vector<VkImage> &_textureImages, std::vector<VkImageView> &_imageViews)
 {
      _imageViews.resize(_textureImages.size());
     for(size_t i = 0; i < _textureImages.size(); ++i)
         _imageViews[i] = createImageView(_textureImages[i], VK_FORMAT_R8G8B8A8_SRGB,VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
-void renderer::createTextureSamplersCharacter(std::vector<VkSampler> &_samplers,std::vector<std::string> _paths)
+void GameRenderer::createTextureSamplersCharacter(std::vector<VkSampler> &_samplers,std::vector<std::string> _paths)
 {
     _samplers.resize(_paths.size());
     for(auto& _sampler : _samplers)
@@ -868,7 +856,7 @@ void renderer::createTextureSamplersCharacter(std::vector<VkSampler> &_samplers,
 
 }
 
-void renderer::createDescriptorSetLayoutCharacter(VkDescriptorSetLayout &_descLayout)
+void GameRenderer::createDescriptorSetLayoutCharacter(VkDescriptorSetLayout &_descLayout)
 {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
@@ -926,7 +914,7 @@ void renderer::createDescriptorSetLayoutCharacter(VkDescriptorSetLayout &_descLa
     }
 }
 
-void renderer::createDescriptorPoolCharacter(VkDescriptorPool &_descPool)
+void GameRenderer::createDescriptorPoolCharacter(VkDescriptorPool &_descPool)
 {
     std::array<VkDescriptorPoolSize, 6> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -958,7 +946,7 @@ void renderer::createDescriptorPoolCharacter(VkDescriptorPool &_descPool)
     }
 }
 
-void renderer::createDescriptorSetsCharacter(std::vector<VkBuffer> &_uniformBuffers, VkDescriptorPool &_descPool,
+void GameRenderer::createDescriptorSetsCharacter(std::vector<VkBuffer> &_uniformBuffers, VkDescriptorPool &_descPool,
                                        VkDescriptorSetLayout &_descLayout, std::vector<VkDescriptorSet> &_descSets,
                                        std::vector<VkImageView>& _imageView,std::vector<VkSampler>& _sampler)
 {
@@ -1068,7 +1056,7 @@ void renderer::createDescriptorSetsCharacter(std::vector<VkBuffer> &_uniformBuff
 }
 
 
-VkImageView renderer::createImageView(VkImage image, VkFormat format,VkImageAspectFlags aspectFlags) {
+VkImageView GameRenderer::createImageView(VkImage image, VkFormat format,VkImageAspectFlags aspectFlags) {
 
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1088,7 +1076,7 @@ VkImageView renderer::createImageView(VkImage image, VkFormat format,VkImageAspe
     return imageView;
 }
 
-void renderer::createTextureSampler(VkSampler &_sampler)
+void GameRenderer::createTextureSampler(VkSampler &_sampler)
 {
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -1116,7 +1104,7 @@ void renderer::createTextureSampler(VkSampler &_sampler)
     }
 }
 
-VkCommandBuffer renderer::beginSingleTimeCommands() {
+VkCommandBuffer GameRenderer::beginSingleTimeCommands() {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -1135,7 +1123,7 @@ VkCommandBuffer renderer::beginSingleTimeCommands() {
     return commandBuffer;
 }
 
-void renderer::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
+void GameRenderer::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1188,7 +1176,7 @@ void renderer::transitionImageLayout(VkImage image, VkFormat format, VkImageLayo
     endSingleTimeCommands(commandBuffer);
 }
 
-void renderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+void GameRenderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1221,7 +1209,7 @@ void renderer::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width,
     endSingleTimeCommands(commandBuffer);
 }
 
-void renderer::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+void GameRenderer::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
     vkEndCommandBuffer(commandBuffer);
 
     VkSubmitInfo submitInfo{};
@@ -1235,7 +1223,7 @@ void renderer::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
     vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-void renderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
+void GameRenderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -1262,7 +1250,7 @@ void renderer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemor
     vkBindBufferMemory(device, buffer, bufferMemory, 0);
 }
 
-void renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+void GameRenderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1273,7 +1261,7 @@ void renderer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize s
     endSingleTimeCommands(commandBuffer);
 }
 
-void renderer::createRenderPass()
+void GameRenderer::createRenderPass()
 {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = swapChainImageFormat;
@@ -1337,7 +1325,16 @@ void renderer::createRenderPass()
     }
 }
 
-void renderer::createFramebuffers()
+void GameRenderer::createDepthResources()
+{
+    VkFormat depthFormat = findDepthFormat();
+    createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+    depthImageView = createImageView(depthImage, depthFormat,VK_IMAGE_ASPECT_DEPTH_BIT);
+
+//    transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+}
+
+void GameRenderer::createFramebuffers()
 {
     swapChainFramebuffers.resize(swapChainImageViews.size());
     for (size_t i = 0; i < swapChainImageViews.size(); i++) {
@@ -1361,7 +1358,7 @@ void renderer::createFramebuffers()
     }
 }
 
-void renderer::createCommandPool()
+void GameRenderer::createCommandPool()
 {
     QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
@@ -1374,7 +1371,7 @@ void renderer::createCommandPool()
     }
 }
 
-void renderer::createCommandBuffer()
+void GameRenderer::createCommandBuffer()
 {
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -1389,90 +1386,7 @@ void renderer::createCommandBuffer()
     }
 }
 
-void renderer::createDescriptorSetLayout()
-{
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = 1;
-    layoutInfo.pBindings = &uboLayoutBinding;
-
-    if (vkCreateDescriptorSetLayout(device, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
-}
-
-void renderer::createDescriptorPool()
-{
-//    VkDescriptorPoolSize poolSize{};
-//    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//    poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-//    VkDescriptorPoolCreateInfo poolInfo{};
-//    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-//    poolInfo.poolSizeCount = 1;
-//    poolInfo.pPoolSizes = &poolSize;
-//    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-//    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
-//        throw std::runtime_error("failed to create descriptor pool!");
-//    }
-}
-
-void renderer::createDescriptorSets()
-{
-//    std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
-//    VkDescriptorSetAllocateInfo allocInfo{};
-//    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-//    allocInfo.descriptorPool = descriptorPool;
-//    allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-//    allocInfo.pSetLayouts = layouts.data();
-
-//    descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-//    if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets.data()) != VK_SUCCESS) {
-//        throw std::runtime_error("failed to allocate descriptor sets!");
-//    }
-
-//    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-//        VkDescriptorBufferInfo bufferInfo{};
-//        bufferInfo.buffer = uniformBuffers[i];
-//        bufferInfo.offset = 0;
-//        bufferInfo.range = sizeof(UniformBufferObject);
-
-//        VkWriteDescriptorSet descriptorWrite{};
-//        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-//        descriptorWrite.dstSet = descriptorSets[i];
-//        descriptorWrite.dstBinding = 0;
-//        descriptorWrite.dstArrayElement = 0;
-//        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-//        descriptorWrite.descriptorCount = 1;
-//        descriptorWrite.pBufferInfo = &bufferInfo;
-
-//        vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
-//    }
-}
-
-void renderer::createUniformBuffers()
-{
-//    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-//    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-//    uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-//    uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-
-//    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-//        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
-
-//        vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
-//    }
-}
-
-void renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void GameRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1511,6 +1425,7 @@ void renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
     for (const auto& i : *_gameObjects)
     {
 
@@ -1547,12 +1462,13 @@ void renderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
     }
 
     vkCmdEndRenderPass(commandBuffer);
+
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffer!");
     }
 }
 
-void renderer::drawFrame()
+void GameRenderer::drawFrame()
 {
     glfwPollEvents();
 
@@ -1624,10 +1540,9 @@ void renderer::drawFrame()
         throw std::runtime_error("failed to present swap chain image!");
     }
 
-    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void renderer::createCharacter(VulkanCharacterObject *object)
+void GameRenderer::createCharacter(VulkanCharacterObject *object)
 {
     createTextureImageCharacter(object->texturePath,object->pixels,object->textureImage,object->textureImageMemory);
     createTextureImageViewCharacher(object->textureImage,object->imageView);
@@ -1644,10 +1559,16 @@ void renderer::createCharacter(VulkanCharacterObject *object)
                             object->descLayout,
                             object->descSets,
                             object->imageView,
-                            object->textureSampler);
+                                  object->textureSampler);
 }
 
-void renderer::createSyncObjects()
+void GameRenderer::createMainMenu(MainMenuClass * _mainMenu)
+{
+    _mainMenuPtr = _mainMenu;
+    this->createObject(_mainMenu->wallpaper);
+}
+
+void GameRenderer::createSyncObjects()
 {
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1671,7 +1592,7 @@ void renderer::createSyncObjects()
 
 }
 
-void renderer::cleanupSwapChain()
+void GameRenderer::cleanupSwapChain()
 {
     for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
             vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
@@ -1684,7 +1605,7 @@ void renderer::cleanupSwapChain()
         vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
-void renderer::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory)
+void GameRenderer::createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory)
 {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -1720,7 +1641,7 @@ void renderer::createImage(uint32_t width, uint32_t height, VkFormat format, VkI
     vkBindImageMemory(device, image, imageMemory, 0);
 }
 
-void renderer::createVertexBuffer(std::vector<Vertex> _vertices, VkBuffer& _vertexBuffer, VkDeviceMemory& _vertexBufferMemory)
+void GameRenderer::createVertexBuffer(std::vector<Vertex> _vertices, VkBuffer& _vertexBuffer, VkDeviceMemory& _vertexBufferMemory)
 {
     VkDeviceSize bufferSize = sizeof(_vertices[0]) * _vertices.size();
 
@@ -1743,7 +1664,7 @@ void renderer::createVertexBuffer(std::vector<Vertex> _vertices, VkBuffer& _vert
     vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 
-void renderer::createIndexBuffer(std::vector<uint32_t> _indices, VkBuffer& _indexBuffer, VkDeviceMemory& _indexBufferMemory)
+void GameRenderer::createIndexBuffer(std::vector<uint32_t> _indices, VkBuffer& _indexBuffer, VkDeviceMemory& _indexBufferMemory)
 {
     VkDeviceSize bufferSize = sizeof(_indices[0]) * _indices.size();
 
@@ -1766,7 +1687,7 @@ void renderer::createIndexBuffer(std::vector<uint32_t> _indices, VkBuffer& _inde
         vkFreeMemory(device, stagingBufferMemory, nullptr);
 }
 using namespace std::chrono_literals;
-void renderer::mainLoop()
+void GameRenderer::mainLoop()
 {
     if (!glfwWindowShouldClose(window))
     {
@@ -1778,7 +1699,7 @@ void renderer::mainLoop()
     vkDeviceWaitIdle(device);
 }
 
-void renderer::cleanup()
+void GameRenderer::cleanup()
 {
     cleanupSwapChain();
 
@@ -1818,7 +1739,7 @@ void renderer::cleanup()
 }
 
 // Debug funcs
-void renderer::setupDebugMessenger()
+void GameRenderer::setupDebugMessenger()
 {
     if (!enableValidationLayers) return;
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -1829,7 +1750,7 @@ void renderer::setupDebugMessenger()
     }
 }
 
-bool renderer::checkValidationLayerSupport()
+bool GameRenderer::checkValidationLayerSupport()
 {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -1854,7 +1775,7 @@ bool renderer::checkValidationLayerSupport()
     return true;
 }
 
-std::vector<const char *> renderer::getRequiredExtensions()
+std::vector<const char *> GameRenderer::getRequiredExtensions()
 {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;

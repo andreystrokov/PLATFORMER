@@ -2,7 +2,8 @@
 #define BACKGROUND_H
 #pragma once
 
-#include "VulkanModel.h"
+#include "Vulkan/VulkanModel.h"
+
 const std::vector<Vertex> verticesWall = {
     {{-1.0f, -1.0f,0.99f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
     {{1.0f, -1.0f,0.99f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},

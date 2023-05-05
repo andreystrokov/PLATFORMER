@@ -2,7 +2,7 @@
 #define MAINACTOR_H
 
 #pragma once
-#include "VulkanCharacterModel.h"
+#include "Vulkan/VulkanCharacterModel.h"
 
 
 //struct COORDS_UBO
@@ -42,7 +42,7 @@ public:
         ATTACK,
         DEATH
     };
-    friend class renderer;
+    friend class GameRenderer;
     void runRight();
     void computeXY();
     void stay();

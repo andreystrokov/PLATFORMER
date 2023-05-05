@@ -1,7 +1,7 @@
 #ifndef GROUND_H
 #define GROUND_H
 
-#include "VulkanModel.h"
+#include "Vulkan/VulkanModel.h"
 #include <string.h>
 
 const std::vector<Vertex> verticesGround = {

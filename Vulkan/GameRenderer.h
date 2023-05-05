@@ -1,12 +1,15 @@
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef GAMERENDERER_H
+#define GAMERENDERER_H
+
+#pragma once
+
 #include <stb/stb_image.h>
 #define GLFW_INCLUDE_VULKAN
 
 #include "controller.h"
 
 #include <GLFW/glfw3.h>
-#include <shaderLoader.h>
+#include <Vulkan/shaderLoader.h>
 #include <stdexcept>
 #include <vector>
 #include <cstring>
@@ -16,6 +19,8 @@
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
 #include <algorithm> // Necessary for std::clamp
+#include "mainMenu.h"
+
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -26,8 +31,8 @@
 #include <QObject>
 
 
-#include "VulkanModel.h"
-#include "VulkanCharacterModel.h"
+#include "Vulkan/VulkanModel.h"
+#include "Vulkan/VulkanCharacterModel.h"
 //#include <QKeyEvent>
 
 
@@ -108,11 +113,11 @@ struct UniformBufferObject {
     const bool enableValidationLayers = true;
 #endif
 
-class renderer : public QObject
+class GameRenderer : public QObject
 {
     Q_OBJECT
 public:
-    renderer();
+    GameRenderer();
     void init();
     void setObjectsPtr(std::vector<VulkanObject *> *_ptr,std::vector<VulkanCharacterObject *> * _characters);
     void run()
@@ -122,10 +127,15 @@ public:
     }
     void drawFrame();
     void createCharacter(VulkanCharacterObject* object);
+
+
+    void createMainMenu(MainMenuClass*);
+
+    MainMenuClass* _mainMenuPtr;
 private:
     void initWindow();
         static void framebufferResizeCallback(GLFWwindow* window,[[maybe_unused]] int width,[[maybe_unused]] int height) {
-            auto app = reinterpret_cast<renderer*>(glfwGetWindowUserPointer(window));
+            auto app = reinterpret_cast<GameRenderer*>(glfwGetWindowUserPointer(window));
                 app->framebufferResized = true;
         }
     void initVulkan();
@@ -326,4 +336,4 @@ private:
     //------------
 };
 
-#endif // RENDERER_H
+#endif // GAMERENDERER_H
