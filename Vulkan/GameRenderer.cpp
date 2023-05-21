@@ -37,6 +37,10 @@ void GameRenderer::initWindow()
 //    glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 //    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
+    GLFWmonitor* MyMonitor =  glfwGetPrimaryMonitor(); // The primary monitor.. Later Occulus?..
+
+        const GLFWvidmode* mode = glfwGetVideoMode(MyMonitor);
+
 //    window = glfwCreateWindow(mode->width,mode->height, "Vulkan", glfwGetPrimaryMonitor(), nullptr); // FULLSCREEN
     window = glfwCreateWindow(800,600, "Vulkan", nullptr, nullptr); // TEST SCREEN
 
@@ -48,8 +52,6 @@ void GameRenderer::initWindow()
 }
 void GameRenderer::initVulkan()
 {
-
-
     createInstance();
     setupDebugMessenger();
     createSurface();
@@ -65,14 +67,9 @@ void GameRenderer::initVulkan()
     createSyncObjects();
 
     for(auto &i : *_gameObjects)
-        {
-            createObject(i);
-        }
-        for(auto &i : *_gameCharacters)
-        {
-            createCharacter(i);
-        }
-
+    {
+        createObject(i);
+    }
 }
 
 void GameRenderer::createInstance()
@@ -625,7 +622,7 @@ void GameRenderer::createDescriptorPoolObj(VkDescriptorPool &_descPool)
 
 void GameRenderer::createDescriptorSetsObj(std::vector<VkBuffer> &_uniformBuffers, VkDescriptorPool &_descPool,
                                        VkDescriptorSetLayout &_descLayout, std::vector<VkDescriptorSet> &_descSets,
-                                       VkImageView& _imageView,VkSampler& _sampler)
+                                       VkImageView& _imageView, VkSampler& _sampler)
 {
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, _descLayout);
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -1426,6 +1423,7 @@ void GameRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+    if(_gameObjects != nullptr && !_gameObjects->empty())
     for (const auto& i : *_gameObjects)
     {
 
@@ -1444,22 +1442,23 @@ void GameRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t i
 
 
     }
-    for (const auto& i : *_gameCharacters)
-    {
+    if(_gameCharacters != nullptr && !_gameCharacters->empty())
+        for (const auto& i : *_gameCharacters)
+        {
 
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, i->ObjPipeline);
-        VkBuffer vertexBuffers[] = { i->vertexBuffer };
-        VkBuffer indexBuffers[] = { i->indexBuffer };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, i->ObjPipeline);
+            VkBuffer vertexBuffers[] = { i->vertexBuffer };
+            VkBuffer indexBuffers[] = { i->indexBuffer };
+            VkDeviceSize offsets[] = { 0 };
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-        vkCmdBindIndexBuffer(commandBuffer, *indexBuffers, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(commandBuffer, *indexBuffers, 0, VK_INDEX_TYPE_UINT32);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, i->pipelineLayout, 0, 1, &i->descSets[currentFrame], 0, nullptr);
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, i->pipelineLayout, 0, 1, &i->descSets[currentFrame], 0, nullptr);
 
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(i->indices.size()), 1, 0, 0, 0);
-    }
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(i->indices.size()), 1, 0, 0, 0);
+        }
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -1540,6 +1539,18 @@ void GameRenderer::drawFrame()
         throw std::runtime_error("failed to present swap chain image!");
     }
 
+}
+
+void GameRenderer::createObjectsFromBuffer()
+{
+    for(auto &i : *_gameObjects)
+    {
+        createObject(i);
+    }
+    for(auto &i : *_gameCharacters)
+    {
+        createCharacter(i);
+    }
 }
 
 void GameRenderer::createCharacter(VulkanCharacterObject *object)

@@ -22,8 +22,6 @@ const std::vector<uint32_t> indicesMainActor = {
     0, 1, 2, 2, 3, 0
 };
 
-
-
 class MainActor : public VulkanCharacterObject
 {
 public:
@@ -69,6 +67,7 @@ private:
     float velocityY = 0;
 
     glm::vec3 coords{-0.7,ground,0.0};
+
 };
 
 #endif // MAINACTOR_H

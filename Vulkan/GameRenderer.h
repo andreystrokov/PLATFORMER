@@ -67,44 +67,6 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
     return VK_FALSE;
 }
 
-struct ObjectBuffer
-{
-    ~ObjectBuffer()
-    {
-    }
-    int idObject;
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
-    VkPipeline ObjPipeline;
-
-    VkPipelineLayout pipelineLayout;
-    VkDescriptorSetLayout descLayout;
-    VkDescriptorPool descPool;
-
-    std::vector<VkDescriptorSet> descSets;
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
-    std::vector<void*> uniformBuffersMapped;
-
-    stbi_uc* pixels = nullptr;
-
-    VkImage textureImage = VK_NULL_HANDLE;
-    VkImageView imageView = VK_NULL_HANDLE;
-    VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
-
-    VkSampler textureSampler = VK_NULL_HANDLE;
-    uint8_t changed = 0;
-};
-
-struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
-};
-
-
 //#define NDEBUG
 
 #ifdef NDEBUG
@@ -116,8 +78,9 @@ struct UniformBufferObject {
 class GameRenderer : public QObject
 {
     Q_OBJECT
-public:
     GameRenderer();
+public:
+    static GameRenderer *Ref() { static GameRenderer rnd; return &rnd;}
     void init();
     void setObjectsPtr(std::vector<VulkanObject *> *_ptr,std::vector<VulkanCharacterObject *> * _characters);
     void run()
@@ -126,13 +89,16 @@ public:
         cleanup();
     }
     void drawFrame();
+
+    void createObjectsFromBuffer();
+
     void createCharacter(VulkanCharacterObject* object);
 
 
     void createMainMenu(MainMenuClass*);
 
     MainMenuClass* _mainMenuPtr;
-private:
+//private:
     void initWindow();
         static void framebufferResizeCallback(GLFWwindow* window,[[maybe_unused]] int width,[[maybe_unused]] int height) {
             auto app = reinterpret_cast<GameRenderer*>(glfwGetWindowUserPointer(window));
@@ -293,11 +259,6 @@ private:
     VkImageView depthImageView = VK_NULL_HANDLE;
 
 
-    ObjectBuffer exampleObject;
-
-
-
-
     std::vector<VulkanObject*>* _gameObjects;
     std::vector<VulkanCharacterObject*>* _gameCharacters;
 //    std::vector<VkBuffer> uniformBuffers;
@@ -311,6 +272,7 @@ private:
     VkDebugUtilsMessengerEXT debugMessenger;
     void setupDebugMessenger();
     bool checkValidationLayerSupport();
+
     VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
         auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
         if (func != nullptr) {

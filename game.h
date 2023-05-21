@@ -14,6 +14,8 @@
 
 using namespace std::chrono_literals;
 
+//#define GAME_RENDER
+
 class GAME
 {
 public:
@@ -28,8 +30,11 @@ private:
 
 
     MainMenuClass mainMenu;
-    GameRenderer rnd;
+
     controller* keyController;
+
+
+
     MainActor*  mainActor = nullptr;
 
     Background* background = nullptr;

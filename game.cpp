@@ -8,8 +8,8 @@ GAME::GAME()
 void GAME::init()
 {
       initObjects();
-      rnd.setObjectsPtr(objects,characters);
-      rnd.init();
+      GameRenderer::Ref()->setObjectsPtr(objects,characters);
+      GameRenderer::Ref()->init();
 
 
 //      rnd.createMainMenu(&mainMenu);
@@ -26,6 +26,12 @@ void GAME::initObjects()
 {
 
     objects = new std::vector<VulkanObject*>;
+    objects->push_back(mainMenu.wallpaper);
+    objects->push_back(mainMenu.newGameBtn);
+    objects->push_back(mainMenu.optionsBtn);
+    objects->push_back(mainMenu.quitBtn);
+    objects->push_back(mainMenu.nameGameText);
+
     characters = new std::vector<VulkanCharacterObject*>;
 
 
@@ -34,32 +40,32 @@ void GAME::initObjects()
                                 "./textures/background/parallax-demon-woods-bg.png",
                                 "./shaders/background_vert.spv",
                                 "./shaders/background_frag.spv");
-    objects->push_back(background);
+//    objects->push_back(background);
     farTrees = new Background(verticesFarTrees,
                                 indicesWall,
                                 "./textures/background/parallax-demon-woods-far-trees.png",
                                 "./shaders/background_vert.spv",
                                 "./shaders/background_frag.spv");
-    objects->push_back(farTrees);
+//    objects->push_back(farTrees);
     midTrees = new Background(verticesMidTrees,
                                 indicesWall,
                                 "./textures/background/parallax-demon-woods-mid-trees.png",
                                 "./shaders/background_vert.spv",
                                 "./shaders/background_frag.spv");
-    objects->push_back(midTrees);
+//    objects->push_back(midTrees);
     closeTrees = new Background(verticesCloseTrees,
                                 indicesWall,
                                 "./textures/background/parallax-demon-woods-close-trees.png",
                                 "./shaders/background_vert.spv",
                                 "./shaders/background_frag.spv");
-    objects->push_back(closeTrees);
+//    objects->push_back(closeTrees);
 
     ground = new Ground(verticesGround,
                         indicesGround,
                         "./textures/background/groundNew.png",
                         "./shaders/background_vert.spv",
                         "./shaders/background_frag.spv");
-    objects->push_back(ground);
+//    objects->push_back(ground);
 
 
     std::vector<std::string> texturesMainActor =
@@ -76,7 +82,7 @@ void GAME::initObjects()
                               texturesMainActor,
                               "./shaders/mainActor_vert.spv",
                               "./shaders/mainActor_frag.spv");
-    characters->push_back(mainActor);
+//    characters->push_back(mainActor);
 
 
 
@@ -85,68 +91,89 @@ void GAME::GameLoop()
 {
     while(true)
     {
-        auto start = std::chrono::high_resolution_clock::now();
-        auto key = keyController->getCurrentKeyPressed();
-
-        for(auto& i : *key)
+        if(!mainMenu.isActive)
         {
-            if(i == GLFW_KEY_ESCAPE)
+            auto start = std::chrono::high_resolution_clock::now();
+            auto key = keyController->getCurrentKeyPressed();
+
+            for(auto& i : *key)
             {
-                if(isPaused)
+                if(i == GLFW_KEY_ESCAPE)
                 {
-                    isPaused = false;
+                    if(isPaused)
+                    {
+                        isPaused = false;
+                    }
+                    else
+                    {
+                        isPaused = true;
+                    }
+                    std::cout << i << std::endl;
                 }
-                else
-                {
-                    isPaused = true;
-                }
-                std::cout << i << std::endl;
-            }
 
-             if(!isPaused)
-             {
-                 if (i == GLFW_KEY_W) {
-                      mainActor->jump();
-                 }
-                 else if (i == GLFW_KEY_A) {
-                     std::cout << "A key pressed" << std::endl;
-                 }
-                 else if (i == GLFW_KEY_S) {
-                     std::cout << "S key pressed" << std::endl;
-                 }
-                 else if (i == GLFW_KEY_D) {
-                     if(!mainActor->getAttackState())
+                 if(!isPaused)
+                 {
+                     if (i == GLFW_KEY_W) {
+                          mainActor->jump();
+                     }
+                     else if (i == GLFW_KEY_A) {
+                         std::cout << "A key pressed" << std::endl;
+                     }
+                     else if (i == GLFW_KEY_S) {
+                         std::cout << "S key pressed" << std::endl;
+                     }
+                     else if (i == GLFW_KEY_D) {
+                         if(!mainActor->getAttackState())
+                         {
+                             farTrees->runFar();
+                             midTrees->runMid();
+                             closeTrees->runClose();
+                             mainActor->runRight();
+                             ground->move();
+
+                             levelGameXCoord+= 0.1;
+                         }
+                     }
+                     else if(i == GLFW_KEY_SPACE)
                      {
-                         farTrees->runFar();
-                         midTrees->runMid();
-                         closeTrees->runClose();
-                         mainActor->runRight();
-                         ground->move();
-
-                         levelGameXCoord+= 0.1;
+                         mainActor->attack();
                      }
                  }
-                 else if(i == GLFW_KEY_SPACE)
-                 {
-                     mainActor->attack();
-                 }
-             }
-        }
-        if(!isPaused)
-        {
-            mainActor->computeXY();
-
-            if(key->size()==0)
+            }
+            if(!isPaused)
             {
-                mainActor->stay();
-                farTrees->stay();
-                midTrees->stay();
-                closeTrees->stay();
-                ground->stay();
+                mainActor->computeXY();
+
+                if(key->size()==0)
+                {
+                    mainActor->stay();
+                    farTrees->stay();
+                    midTrees->stay();
+                    closeTrees->stay();
+                    ground->stay();
+                }
             }
         }
-
-        rnd.drawFrame();
+        else
+        {
+            auto key = keyController->getCurrentKeyPressed();
+            for(auto& i : *key)
+            {
+                if(i == GLFW_KEY_ENTER)
+                {
+                    mainMenu.isActive = false;
+                    objects->clear();
+                    objects->push_back(background);
+                    objects->push_back(farTrees);
+                    objects->push_back(midTrees);
+                    objects->push_back(closeTrees);
+                    objects->push_back(ground);
+                    characters->push_back(mainActor);
+                    GameRenderer::Ref()->createObjectsFromBuffer();
+                }
+            }
+        }
+        GameRenderer::Ref()->drawFrame();
         std::this_thread::sleep_for(0.16ms);
     }
 }
